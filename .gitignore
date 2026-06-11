@@ -1,3 +1,5 @@
 rbuf
 obj/
 *.o
+compile_commands.json
+.cache/
