@@ -1,3 +1,4 @@
+#include "../includes/BOOST_SPSC.hpp"
 #include "../includes/FS_SPSC.hpp"
 #include "../includes/MTX_SPSC.hpp"
 #include "../includes/SPSC.hpp"
@@ -93,6 +94,9 @@ template <typename Qtype> void runTest(const std::string &test_name) {
  * MAIN SPSC:
  * Main implementation, with all possible optimizations
  *
+ * BOOST SPSC:
+ * Boost library implementation
+ *
  * FS SPSC:
  * Atomics are false shared (share the same cache line)
  * No specified cache ordering (default order)
@@ -104,6 +108,7 @@ int main() {
   pin_thread(0);
 
   runTest<SPSC<size_t, 1024>>("MAIN SPSC");
+  runTest<BOOST_SPSC<size_t, 1024>>("BOOST SPSC");
   runTest<FS_SPSC<size_t, 1024>>("FS SPSC");
   runTest<MTX_SPSC<size_t, 1024>>("MUTEX SPSC");
 
