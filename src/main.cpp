@@ -1,16 +1,16 @@
 #include "../includes/BOOST_SPSC.hpp"
 #include "../includes/FS_SPSC.hpp"
-#include "../includes/MTX_SPSC.hpp"
+#include "../includes/LOCK_SPSC.hpp"
 #include "../includes/SPSC.hpp"
 #include <algorithm>
 #include <atomic>
-#include <cassert>
 #include <cstdint>
 #include <print>
 #include <thread>
 #include <vector>
 
 static constexpr size_t N{10'100'000};
+static constexpr size_t WARMUP{100'000};
 
 inline void pin_thread(int core_id) {
   cpu_set_t cpuset;
@@ -19,23 +19,23 @@ inline void pin_thread(int core_id) {
   pthread_setaffinity_np(pthread_self(), sizeof(cpu_set_t), &cpuset);
 }
 
-inline void inline_pause() { __builtin_ia32_pause(); }
+inline void inline_pause() noexcept { __builtin_ia32_pause(); }
 
 [[nodiscard]]
-inline uint64_t rdtsc_start() {
+inline uint64_t rdtsc_start() noexcept {
   uint32_t lo, hi;
   __asm__ volatile("lfence\n\trdtsc" : "=a"(lo), "=d"(hi));
   return static_cast<uint64_t>(hi) << 32 | lo;
 }
 
 [[nodiscard]]
-inline uint64_t rdtsc_end() {
+inline uint64_t rdtsc_end() noexcept {
   uint32_t lo, hi, aux;
   __asm__ volatile("rdtscp\n\tlfence" : "=a"(lo), "=d"(hi), "=c"(aux));
   return static_cast<uint64_t>(hi) << 32 | lo;
 }
 
-template <typename Qtype> void runTest(const std::string &test_name) {
+template <typename Qtype> void run_test(const std::string_view name) {
   Qtype queue;
   std::vector<uint64_t> latencies(N, 0);
   std::atomic<bool> start_signal{false};
@@ -52,6 +52,8 @@ template <typename Qtype> void runTest(const std::string &test_name) {
 
       while (!queue.push(std::move(timestamp))) {
         inline_pause();
+
+        // re-stamp: measure push round-trip, not wait time
         timestamp = rdtsc_start();
       }
 
@@ -78,39 +80,45 @@ template <typename Qtype> void runTest(const std::string &test_name) {
     }
   });
 
+  // already joins when it goes out of scope btw but printing
+  // the results require an early join
   producer.join();
   consumer.join();
 
-  std::ranges::sort(latencies);
+  auto measured = std::span(latencies).subspan(WARMUP);
+  std::ranges::sort(measured);
 
-  std::println("[{}]", test_name);
-  std::println("  p50  :   {} cycles", latencies[N * 50 / 100]);
-  std::println("  p99  :   {} cycles", latencies[N * 99 / 100]);
-  std::println("  p999 :   {} cycles", latencies[N * 999 / 1000]);
+  const auto p = [&](double pct) -> uint64_t {
+    const size_t idx = static_cast<size_t>(pct / 100.0 * measured.size());
+    return measured[std::min(idx, measured.size() - 1)];
+  };
+
+  std::println("[{}]", name);
+  std::println("  p50  : {:>8} cycles", p(50.0));
+  std::println("  p99  : {:>8} cycles", p(99.0));
+  std::println("  p999 : {:>8} cycles", p(99.9));
   std::println("-----------------");
 }
 
 /**
  * MAIN SPSC:
- * Main implementation, with all possible optimizations
+ * Main implementation, with all possible optimizations i could personally find
  *
  * BOOST SPSC:
- * Boost library implementation
+ * Boost library implementation, wrapped around a reusable struct
  *
  * FS SPSC:
  * Atomics are false shared (share the same cache line)
  * No specified cache ordering (default order)
  *
- * MTX SPSC:
- * Lock-based queue
+ * LOCK SPSC:
+ * Lock-based queue using mutexes
  */
 int main() {
   pin_thread(0);
 
-  runTest<SPSC<size_t, 1024>>("MAIN SPSC");
-  runTest<BOOST_SPSC<size_t, 1024>>("BOOST SPSC");
-  runTest<FS_SPSC<size_t, 1024>>("FS SPSC");
-  runTest<MTX_SPSC<size_t, 1024>>("MUTEX SPSC");
-
-  return 0;
+  run_test<SPSC<size_t, 1024>>("My SPSC");
+  run_test<BOOST_SPSC<size_t, 1024>>("Boost SPSC");
+  run_test<FS_SPSC<size_t, 1024>>("False sharing SPSC");
+  run_test<LOCK_SPSC<size_t, 1024>>("Lock-based SPSC");
 }

@@ -1,0 +1,21 @@
+[
+  {
+    "file": "src/main.cpp",
+    "arguments": [
+      "/usr/bin/clang++",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-std=c++26",
+      "-pthread",
+      "-O3",
+      "-I./includes",
+      "-c",
+      "src/main.cpp",
+      "-o",
+      "obj/main.o"
+    ],
+    "directory": "/home/enzo/projects/rbuf",
+    "output": "obj/main.o"
+  }
+]
