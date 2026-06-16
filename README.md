@@ -24,30 +24,7 @@ The project compares four different SPSC implementations:
 
 Here is a recent benchmark sample on my machine measuring latency percentiles (lower is better):
 
-```text
-[My SPSC]
-  p50  :      517 cycles
-  p99  :      582 cycles
-  p999 :      667 cycles
------------------
-[Boost SPSC]
-  p50  :      433 cycles
-  p99  :      573 cycles
-  p999 :      655 cycles
------------------
-[False sharing SPSC]
-  p50  :      611 cycles
-  p99  :      703 cycles
-  p999 :      845 cycles
------------------
-[Lock-based SPSC]
-  p50  :     1501 cycles
-  p99  :     2566 cycles
-  p999 :     2803 cycles
------------------
-```
-
-![Benchmark Results](benchmark_results.png)
+![Benchmark Results](plot/benchmark_results.png)
 
 ### Observations
 
