@@ -3,7 +3,7 @@
 #include <atomic>
 #include <cstddef>
 
-template <typename T, size_t Capacity> class FS_SPSC {
+template <typename T, size_t Capacity> class NaiveSpsc {
 private:
   std::array<T, Capacity> buffer_;
   std::atomic_size_t head_{0};

@@ -1,7 +1,7 @@
-#include "../includes/BOOST_SPSC.hpp"
-#include "../includes/FS_SPSC.hpp"
-#include "../includes/LOCK_SPSC.hpp"
-#include "../includes/SPSC.hpp"
+#include "../includes/BoostSpsc.hpp"
+#include "../includes/LockSpsc.hpp"
+#include "../includes/MySpsc.hpp"
+#include "../includes/NaiveSpsc.hpp"
 #include <algorithm>
 #include <atomic>
 #include <cstdint>
@@ -9,6 +9,7 @@
 #include <thread>
 #include <vector>
 
+static constexpr size_t BUFFER_SIZE{1024};
 static constexpr size_t N{10'100'000};
 static constexpr size_t WARMUP{100'000};
 
@@ -101,24 +102,24 @@ template <typename Qtype> void run_test(const std::string_view name) {
 }
 
 /**
- * MAIN SPSC:
+ * Mine:
  * Main implementation, with all possible optimizations i could personally find
  *
- * BOOST SPSC:
+ * Boost:
  * Boost library implementation, wrapped around a reusable struct
  *
- * FS SPSC:
+ * Naive:
  * Atomics are false shared (share the same cache line)
  * No specified cache ordering (default order)
  *
- * LOCK SPSC:
+ * Locked with mutex:
  * Lock-based queue using mutexes
  */
 int main() {
   pin_thread(0);
 
-  run_test<SPSC<size_t, 1024>>("My SPSC");
-  run_test<BOOST_SPSC<size_t, 1024>>("Boost SPSC");
-  run_test<FS_SPSC<size_t, 1024>>("False sharing SPSC");
-  run_test<LOCK_SPSC<size_t, 1024>>("Lock-based SPSC");
+  run_test<MySpsc<size_t, BUFFER_SIZE>>("My SPSC");
+  run_test<BoostSpsc<size_t, BUFFER_SIZE>>("Boost's SPSC");
+  run_test<NaiveSpsc<size_t, BUFFER_SIZE>>("Naive SPSC");
+  run_test<LockSpsc<size_t, BUFFER_SIZE>>("Lock-based SPSC");
 }

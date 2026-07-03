@@ -2,7 +2,7 @@
   {
     "file": "src/main.cpp",
     "arguments": [
-      "/usr/bin/clang++",
+      "/usr/sbin/clang++",
       "-Wall",
       "-Wextra",
       "-Werror",
@@ -15,7 +15,7 @@
       "-o",
       "obj/main.o"
     ],
-    "directory": "/home/enzo/projects/rbuf",
+    "directory": "/home/kuru/projects/rbuffer",
     "output": "obj/main.o"
   }
 ]

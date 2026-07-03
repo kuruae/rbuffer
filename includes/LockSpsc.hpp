@@ -3,7 +3,7 @@
 #include <mutex>
 #include <utility>
 
-template <typename T, size_t Capacity> class LOCK_SPSC {
+template <typename T, size_t Capacity> class LockSpsc {
 private:
   std::array<T, Capacity> buffer_;
   size_t head_{0};

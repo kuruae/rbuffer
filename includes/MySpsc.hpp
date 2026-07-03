@@ -4,7 +4,7 @@
 #include <cstddef>
 #include <new>
 
-template <typename T, size_t Capacity> class SPSC {
+template <typename T, size_t Capacity> class MySpsc {
   static_assert(std::has_single_bit(Capacity),
                 "Capacity must be a power of two");
 

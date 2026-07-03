@@ -1,6 +1,6 @@
 #include <boost/lockfree/spsc_queue.hpp>
 
-template <typename T, size_t Capacity> class BOOST_SPSC {
+template <typename T, size_t Capacity> class BoostSpsc {
 private:
   boost::lockfree::spsc_queue<T, boost::lockfree::capacity<Capacity>> queue_;
 
